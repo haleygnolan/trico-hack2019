@@ -3,3 +3,8 @@ erd,mtwrf,l,11:30,13:00
 erd,mtwrfsu,d,17:00,19:00
 erd,s,b,7:30,9:30
 erd,su,br,10:00,13:30
+nd,mtwrf,l,12:00,16:00
+nd,mtwr,d,16:00,20:00
+nd,fsu,d,16:00,18:30
+nd,su,br,11:00,1:30
+nd,su,ll,1:30,16:00

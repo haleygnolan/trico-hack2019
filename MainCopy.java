@@ -13,42 +13,20 @@ public class Main{
 
   public static final String MENU_CSV = "hours.csv";
 
-  public static final int NAME = 0;
+  public static final int HALL = 0;
   public static final int DATE = 1;
   public static final int MEAL = 2;
   public static final int OPEN_HOUR = 3;
   public static final int CLOSE_HOUR = 4;
-
   private static Hashtable<String, String> halls = new Hashtable<String,String>();
   private static Hashtable<String, String> meals = new Hashtable<String,String>();
   private static Hashtable<String, Integer> daysInt= new Hashtable<String, Integer>();
   private static Hashtable<Integer, String> daysToString= new Hashtable<Integer, String>();
 
-  private static Hashtable<String, DiningHall> diningHallInfo = new Hashtable <String, DiningHall>();
 
   public static void main(String[] args) throws FileNotFoundException{
-    setUpDictionaries();
+    //set up dictionaries
 
-    Scanner scanner = new Scanner(new File(MENU_CSV));
-
-    while(scanner.hasNextLine()){
-      String str = scanner.nextLine();
-      String[] info = str.split(",");
-
-      String hallName = info[NAME];
-      if(!diningHallInfo.containsKey(hallName)){
-          diningHallInfo.put(hallName, new DiningHall(halls.get(hallName)));
-      }
-      DiningHall hall = diningHallInfo.get(hallName);
-      hall.append(new Hour(info[DATE],meals.get(info[MEAL]),info[OPEN_HOUR],info[CLOSE_HOUR],daysInt,daysToString));
-    }
-
-    DiningHall erdman = diningHallInfo.get("erd");
-    System.out.println(erdman.toString());
-
-  }
-
-  public static void setUpDictionaries(){
     halls.put("erd","Erdman Dining Hall");
     halls.put("nd", "New Dorm Dining hall");
 
@@ -56,7 +34,6 @@ public class Main{
     meals.put("l", "lunch");
     meals.put("d","dinner");
     meals.put("br","brunch/lunch");
-    meals.put("ll","light lunch");
 
     daysInt.put("Monday",0);
     daysInt.put("Tuesday",1);
@@ -75,50 +52,29 @@ public class Main{
     daysToString.put(5,"Saturday");
     daysToString.put(6,"Sunday");
 
+    Scanner scanner = new Scanner(new File(MENU_CSV));
+    ArrayList<Hours> hours = new ArrayList<Hours>();
+    while(scanner.hasNextLine()){
+      String str = scanner.nextLine();
+      String[] info = str.split(",");
+      Hours hour = new Hours(info[HALL],info[DATE],info[MEAL],
+      info[OPEN_HOUR],info[CLOSE_HOUR], halls, meals, daysInt, daysToString);
 
-  }
-}
+      hours.add(hour);
 
-
-class DiningHall{
-  private String name;
-  private ArrayList<Hour> hours;
-  private String mealString;
-
-  public DiningHall(String name){
-    this.name = name;
-    hours = new ArrayList<Hour>();
-
-  }
-
-  public Boolean isOpenNow(){
-    for(Hour meal:hours){
-      if(meal.isOpenNow()){
-        mealString = meal.toString();
-        return true;
-      }
     }
-    return false;
-  }
 
-  public void append(Hour hour){
-    hours.add(hour);
-
-  }
-
-  @Override
-  public String toString(){
-    System.out.println(hours);
-    if(isOpenNow()){
-      return name + mealString;
+    for(int i = 0; i<hours.size(); i++){
+      System.out.println(hours.get(i).toString() + "   "+ hours.get(i).isOpenNow());
     }
-    return name + " is not open now.";
 
   }
+
 
 }
 
-class Hour{
+class Hours{
+  private String hall;
   private String range;
   private String meal;
   private LocalTime start;
@@ -128,15 +84,15 @@ class Hour{
   private Hashtable<String, Integer> daysInt;
   private Hashtable<Integer, String> daysToString;
 
-  public Hour(String range, String meal, String start, String end,
+  public Hours(String hall, String range, String meal,
+   String start,
+   String end, Hashtable<String, String> halls, Hashtable<String, String> meals,
   Hashtable<String, Integer> daysInt, Hashtable<Integer, String> daysToString){
-    //dictionaries
-
     this.daysInt = daysInt;
     this.daysToString = daysToString;
-
-    //instance variable
-    this.meal = meal;
+    this.hall = halls.get(hall);
+    this.range = range;
+    this.meal = meals.get(meal);
 
     String[] startSplit = start.split(":");
     this.start = LocalTime.of(Integer.parseInt(startSplit[0]),Integer.parseInt(startSplit[1]));
@@ -153,9 +109,8 @@ class Hour{
     days[daysInt.get("Sunday")] = range.indexOf("u") != -1;
   }
 
-
-  public String getMeal(){
-    return meal;
+  public String getHall(){
+    return hall;
   }
 
   public Boolean isOpenDay(String dayOfWeek){
@@ -171,23 +126,21 @@ class Hour{
   }
 
   public Boolean isOpenNow(){
-    return isBeforeEndTime() && isAfterStartTime()
-    && isOpenDay(LocalDate.now().getDayOfWeek().getDisplayName(TextStyle.FULL,new Locale("en")));
+    return isBeforeEndTime() && isAfterStartTime() && isOpenDay(LocalDate.now().getDayOfWeek().getDisplayName(TextStyle.FULL,new Locale("en")));
   }
 
   public String getDays(){
     String str = "";
     for(int i = 0; i<days.length;i++){
       if(days[i]){
-        str += daysToString.get(i)+", ";
+        str+=daysToString.get(i)+", ";
       }
     }
     return str.substring(0, str.lastIndexOf(", "));
   }
-
   @Override
   public String toString(){
-    return " serves "+ meal + " from "+ start.toString()+ " until " + end.toString()+ " on "+ getDays()+ ".";
+    return hall + " serves "+ meal + " from "+ start.toString()+ " until " + end.toString()+ " on "+ getDays()+ ".";
   }
 
 
